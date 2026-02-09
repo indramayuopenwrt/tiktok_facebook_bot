@@ -1,19 +1,19 @@
+# TikTok & Facebook Downloader Bot
 
-# Telegram TikTok & Facebook Downloader Bot
+Bot Telegram ini dapat digunakan untuk mengunduh video dari TikTok dan Facebook secara otomatis. Cukup kirimkan link video TikTok atau Facebook ke bot, dan bot akan mengunduh video tersebut tanpa watermark.
 
-## Features
-- Download TikTok / Facebook videos
-- Download all TikTok username videos
-- Download all Facebook Page videos
-- Filter by views / likes / date
-- Auto ZIP results
-- Real-time progress
-- Auto update (git pull)
-- Auto restart
+## Fitur:
+- Auto-detect link TikTok atau Facebook
+- Mengunduh video dengan kualitas terbaik (HD)
+- Mendukung pengunduhan video TikTok berdasarkan username menggunakan command `/ttmass <username>`
 
-## Deployment (Railway)
-1. Push repo ke GitHub
-2. Create new project on Railway → Deploy from GitHub
-3. Set environment variable:
-   - TOKEN = <BOT_TOKEN_KAMU>
-4. Railway automatically builds Docker and runs bot
+## Cara Menjalankan:
+1. Clone repository ini.
+2. Install dependencies menggunakan `pip install -r requirements.txt`.
+3. Daftarkan bot ke Telegram menggunakan BotFather dan masukkan token di file `bot.py`.
+4. Jalankan bot menggunakan `python bot.py`.
+
+## Deployment ke Railway:
+1. Upload kode ke GitHub.
+2. Deploy aplikasi ke Railway dengan mengikuti petunjuk di Railway.app.
+3. Setel environment variable `TELEGRAM_BOT_TOKEN` dengan token yang diperoleh dari BotFather.
