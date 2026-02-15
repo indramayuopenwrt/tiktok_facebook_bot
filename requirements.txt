@@ -4,3 +4,5 @@ moviepy
 ffmpeg-python
 TikTokApi
 beautifulsoup4
+numpy
+Pillow
