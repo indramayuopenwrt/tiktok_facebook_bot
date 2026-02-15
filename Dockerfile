@@ -1,8 +1,15 @@
 # Gunakan image Python terbaru
 FROM python:3.9-slim
 
-# Update package list dan install ffmpeg
-RUN apt-get update && apt-get install -y ffmpeg
+# Install beberapa dependensi dasar untuk membangun dan menginstal ffmpeg
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    ffmpeg \
+    libsm6 \
+    libxext6 \
+    libx264-dev \
+    libavcodec-dev \
+    libavformat-dev
 
 # Set working directory
 WORKDIR /app
