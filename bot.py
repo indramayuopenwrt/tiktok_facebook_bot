@@ -1,130 +1,82 @@
 import os
-import cv2
-from TikTokApi import TikTokApi
-from facebook_scraper import get_posts
-import youtube_dl
+import requests
+from moviepy.editor import VideoFileClip
+from tiktokapi import TikTokApi
 from telegram import Update
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext
-from tqdm import tqdm
+import ffmpeg
+from telegram import ParseMode
 
-# Fungsi untuk mengunduh video TikTok dengan kualitas terbaik (HD)
-def download_tiktok_video(url, user_id):
+# Token Bot Telegram Anda
+TOKEN = 'YOUR_BOT_TOKEN'
+
+# Fungsi untuk mendownload video TikTok
+def download_tiktok_video(url):
     api = TikTokApi.get_instance()
-    video = api.video(url=url)
-    
-    # Menyaring kualitas terbaik video yang tersedia
-    video_data = video.bytes()
-    filename = f"tiktok_video_{user_id}.mp4"
-    
-    with open(filename, 'wb') as f:
+    video_data = api.video(url=url).bytes()
+    with open('tiktok_video.mp4', 'wb') as f:
         f.write(video_data)
-    
-    return filename
+    return 'tiktok_video.mp4'
 
-# Fungsi untuk mengunduh video Facebook dengan kualitas terbaik (HD)
-def download_facebook_video(url, user_id):
-    ydl_opts = {
-        'format': 'bestvideo+bestaudio/best',  # Memilih kualitas terbaik (HD)
-        'outtmpl': f'facebook_video_{user_id}.mp4'
-    }
-    with youtube_dl.YoutubeDL(ydl_opts) as ydl:
-        ydl.download([url])
-    return f"facebook_video_{user_id}.mp4"
+# Fungsi untuk menghapus watermark dari video
+def remove_watermark(input_file):
+    output_file = "clean_video.mp4"
+    clip = VideoFileClip(input_file)
+    # Pemotongan atau penghilangan watermark (sesuaikan dengan kebutuhan)
+    clip = clip.subclip(0, clip.duration)
+    clip.write_videofile(output_file, codec="libx264")
+    return output_file
 
-# Fungsi untuk mendeteksi dan mengunduh video berdasarkan URL
-def detect_and_download_video(url, user_id):
-    if "tiktok.com" in url:
-        return download_tiktok_video(url, user_id)
-    elif "facebook.com" in url:
-        return download_facebook_video(url, user_id)
-    else:
-        return None
-
-# Fungsi untuk menghapus watermark
-def remove_watermark(input_video_path, user_id):
-    output_video_path = f"no_watermark_{user_id}.mp4"
-    cap = cv2.VideoCapture(input_video_path)
-    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-    fps = cap.get(cv2.CAP_PROP_FPS)
-    width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-    height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-    
-    out = cv2.VideoWriter(output_video_path, fourcc, fps, (width, height))
-    while cap.isOpened():
-        ret, frame = cap.read()
-        if not ret:
-            break
-
-        frame = frame[0:height-50, 50:width-50]  # Crop the watermark area
-        out.write(frame)
-
-    cap.release()
-    out.release()
-    return output_video_path
-
-# Fungsi untuk mengambil metadata video TikTok
-def get_tiktok_metadata(url):
+# Fungsi untuk mendapatkan metadata deskripsi
+def get_video_metadata(url):
     api = TikTokApi.get_instance()
     video = api.video(url=url)
     metadata = {
-        'description': video.description,
-        'author': video.author.username,
-        'likes': video.stats.digg_count,
-        'comments': video.stats.comment_count,
-        'shares': video.stats.share_count
+        "title": video.title,
+        "description": video.description,
+        "author": video.author,
+        "likes": video.stats.likes,
+        "shares": video.stats.shares
     }
     return metadata
 
-# Fungsi untuk mengambil metadata video Facebook
-def get_facebook_metadata(url):
-    posts = get_posts(url, pages=1)
-    for post in posts:
-        metadata = {
-            'description': post['text'],
-            'likes': post['likes'],
-            'comments': post['comments'],
-            'shares': post['shares']
-        }
-        return metadata
-
-# Command /start untuk bot Telegram
-def start(update: Update, context: CallbackContext):
-    update.message.reply_text("Halo! Kirimkan saya link video TikTok atau Facebook, dan saya akan mengunduhnya untuk Anda.")
-
-# Handler untuk mengunduh video berdasarkan URL
-def download(update: Update, context: CallbackContext):
-    user_id = update.message.from_user.id
+# Fungsi untuk mengunduh video berdasarkan link
+def download_video(update: Update, context: CallbackContext):
     url = update.message.text
-    update.message.reply_text("Mengunduh video... harap tunggu.")
-
-    # Mengunduh video dan mengirimkan video ke pengguna
-    filename = detect_and_download_video(url, user_id)
-    
-    if filename:
-        update.message.reply_text(f"Video berhasil diunduh. Mengirimkan video...")
-        with open(filename, 'rb') as video_file:
-            update.message.reply_video(video_file)
-        os.remove(filename)  # Menghapus file video setelah dikirim
+    if 'tiktok.com' in url:
+        update.message.reply_text("Mengunduh video TikTok...")
+        video_file = download_tiktok_video(url)
+        video_no_watermark = remove_watermark(video_file)
+        metadata = get_video_metadata(url)
+        update.message.reply_text(f"**Title**: {metadata['title']}\n**Description**: {metadata['description']}\n**Author**: {metadata['author']}\n**Likes**: {metadata['likes']}\n**Shares**: {metadata['shares']}", parse_mode=ParseMode.MARKDOWN)
+        context.bot.send_video(chat_id=update.effective_chat.id, video=open(video_no_watermark, 'rb'))
+    elif 'facebook.com' in url:
+        update.message.reply_text("Mengunduh video Facebook...")
+        # Implementasi Facebook Scraper (Perlu akses API atau scraping manual)
+        pass
     else:
-        update.message.reply_text("URL tidak valid atau tidak didukung. Coba kirim link TikTok atau Facebook.")
+        update.message.reply_text("Link tidak dikenali. Harap kirim link TikTok atau Facebook.")
 
-# Fungsi utama untuk menjalankan bot Telegram
-def main():
-    # Ganti dengan token bot Telegram Anda yang didapat dari BotFather
-    token = "YOUR_BOT_API_TOKEN"
-    
-    updater = Updater(token, use_context=True)
-    dispatcher = updater.dispatcher
+# Fungsi untuk download massal berdasarkan username TikTok
+def download_mass_by_username(update: Update, context: CallbackContext):
+    username = context.args[0]
+    update.message.reply_text(f"Memulai unduhan massal untuk pengguna {username}...")
+    # Implementasi untuk mengambil video berdasarkan username di TikTok
+    # Bisa menggunakan API atau scraping untuk mendapatkan daftar video
+    pass
 
-    # Menambahkan handler untuk /start
-    dispatcher.add_handler(CommandHandler("start", start))
+# Fungsi untuk menampilkan progress unduhan
+def show_progress(update, total, current):
+    percent = (current / total) * 100
+    update.message.edit_text(f"Progress: {percent:.2f}%")
 
-    # Menambahkan handler untuk pesan teks (URL)
-    dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, download))
+# Menambahkan handler
+updater = Updater(TOKEN, use_context=True)
+dispatcher = updater.dispatcher
 
-    # Memulai bot
-    updater.start_polling()
-    updater.idle()
+dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, download_video))
+dispatcher.add_handler(CommandHandler('mass', download_mass_by_username))
 
-if __name__ == "__main__":
-    main()
+# Memulai bot
+updater.start_polling()
+updater.idle()
