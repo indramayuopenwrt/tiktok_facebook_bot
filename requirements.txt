@@ -1,7 +1,7 @@
-
 python-telegram-bot==13.0
 TikTokApi
 facebook-scraper
 youtube-dl
 opencv-python-headless
 tqdm
+lxml[html_clean]
