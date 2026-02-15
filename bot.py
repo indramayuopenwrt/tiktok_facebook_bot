@@ -1,4 +1,3 @@
-
 import os
 import cv2
 from TikTokApi import TikTokApi
@@ -12,14 +11,14 @@ from tqdm import tqdm
 def download_tiktok_video(url, user_id):
     api = TikTokApi.get_instance()
     video = api.video(url=url)
-
+    
     # Menyaring kualitas terbaik video yang tersedia
     video_data = video.bytes()
     filename = f"tiktok_video_{user_id}.mp4"
-
+    
     with open(filename, 'wb') as f:
         f.write(video_data)
-
+    
     return filename
 
 # Fungsi untuk mengunduh video Facebook dengan kualitas terbaik (HD)
@@ -49,7 +48,7 @@ def remove_watermark(input_video_path, user_id):
     fps = cap.get(cv2.CAP_PROP_FPS)
     width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
     height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-
+    
     out = cv2.VideoWriter(output_video_path, fourcc, fps, (width, height))
     while cap.isOpened():
         ret, frame = cap.read()
@@ -100,7 +99,7 @@ def download(update: Update, context: CallbackContext):
 
     # Mengunduh video dan mengirimkan video ke pengguna
     filename = detect_and_download_video(url, user_id)
-
+    
     if filename:
         update.message.reply_text(f"Video berhasil diunduh. Mengirimkan video...")
         with open(filename, 'rb') as video_file:
@@ -113,7 +112,7 @@ def download(update: Update, context: CallbackContext):
 def main():
     # Ganti dengan token bot Telegram Anda yang didapat dari BotFather
     token = "YOUR_BOT_API_TOKEN"
-
+    
     updater = Updater(token, use_context=True)
     dispatcher = updater.dispatcher
 
