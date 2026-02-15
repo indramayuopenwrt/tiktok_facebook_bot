@@ -1,7 +1,8 @@
-python-telegram-bot==20.0
-TikTokApi
-facebook-scraper
-youtube-dl
-opencv-python-headless
-tqdm
-lxml[html_clean]
+python-telegram-bot==13.0      # Versi stabil yang lebih lama, menghindari masalah dengan imghdr dan InputFile
+TikTokApi==6.0.0               # Versi stabil TikTok API
+facebook-scraper==0.2.60       # Versi stabil dari facebook-scraper
+youtube-dl==2021.12.17         # Versi stabil dari youtube-dl
+opencv-python-headless==4.5.5.64 # Versi headless untuk OpenCV, tanpa kebutuhan pustaka GUI tambahan
+tqdm==4.62.3                   # Versi stabil dari tqdm untuk progress bar
+lxml[html_clean]==4.6.3         # Versi stabil dari lxml dengan support html_clean
+greenlet==1.1.2                # Versi stabil dari greenlet
