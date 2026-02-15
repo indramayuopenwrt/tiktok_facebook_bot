@@ -1,8 +1,6 @@
-python-telegram-bot==13.0      # Versi stabil yang lebih lama
-TikTokApi==3.0.0               # Versi stabil TikTok API yang lebih banyak didukung
-facebook-scraper==0.2.59       # Versi stabil dari facebook-scraper yang kompatibel
-youtube-dl==2021.12.17         # Versi stabil dari youtube-dl
-opencv-python-headless==4.5.5.64 # Versi headless untuk OpenCV, tanpa kebutuhan pustaka GUI tambahan
-tqdm==4.62.3                   # Versi stabil dari tqdm untuk progress bar
-lxml==4.6.3                    # Versi stabil dari lxml yang lebih kompatibel
-greenlet==1.0.0                # Versi stabil dari greenlet
+python-telegram-bot
+requests
+moviepy
+ffmpeg-python
+TikTokApi
+beautifulsoup4
