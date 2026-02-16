@@ -1,5 +1,5 @@
 from telegram import Update
-from telegram.ext import Updater, CommandHandler, CallbackContext
+from telegram.ext import Application, CommandHandler, CallbackContext
 import requests
 import yt_dlp
 import subprocess
@@ -48,33 +48,36 @@ def download_video(url):
                 bar.update(len(chunk))
 
 # Fungsi untuk memulai interaksi dengan bot Telegram
-def start(update: Update, context: CallbackContext):
-    update.message.reply_text('Welcome! Send me a TikTok or Facebook video link.')
+async def start(update: Update, context: CallbackContext):
+    await update.message.reply_text('Welcome! Send me a TikTok or Facebook video link.')
 
 # Fungsi untuk menangani pengunduhan video dari TikTok atau Facebook
-def download(update: Update, context: CallbackContext):
+async def download(update: Update, context: CallbackContext):
     url = update.message.text
     if "tiktok.com" in url:
-        update.message.reply_text("Downloading TikTok video...")
+        await update.message.reply_text("Downloading TikTok video...")
         video_url = get_tiktok_video(url)  # Mendapatkan URL video TikTok
     elif "facebook.com" in url:
-        update.message.reply_text("Downloading Facebook video...")
+        await update.message.reply_text("Downloading Facebook video...")
         video_url = get_facebook_video(url)  # Mendapatkan URL video Facebook
     else:
-        update.message.reply_text('Link not recognized. Please send a valid TikTok or Facebook link.')
+        await update.message.reply_text('Link not recognized. Please send a valid TikTok or Facebook link.')
         return
 
-    update.message.reply_text("Sending video...")
-    update.message.reply_video(video_url)  # Mengirimkan video ke pengguna
+    await update.message.reply_text("Sending video...")
+    await update.message.reply_video(video_url)  # Mengirimkan video ke pengguna
 
 # Fungsi utama untuk menjalankan bot
-def main():
-    updater = Updater('8305181648:AAFqVhMdh2vBiLzb9N3z3H5AXt7LKZMEZDk')  # Ganti dengan token API Anda
-    dispatcher = updater.dispatcher
-    dispatcher.add_handler(CommandHandler('start', start))
-    dispatcher.add_handler(CommandHandler('download', download))
-    updater.start_polling()
-    updater.idle()
+async def main():
+    application = Application.builder().token('8305181648:AAFqVhMdh2vBiLzb9N3z3H5AXt7LKZMEZDk').build()  # Ganti dengan token API Anda
+
+    # Menambahkan handler
+    application.add_handler(CommandHandler('start', start))
+    application.add_handler(CommandHandler('download', download))
+
+    # Memulai bot
+    await application.run_polling()
 
 if __name__ == '__main__':
-    main()
+    import asyncio
+    asyncio.run(main())  # Menjalankan aplikasi secara asinkron
