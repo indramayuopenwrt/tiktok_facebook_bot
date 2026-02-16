@@ -68,16 +68,15 @@ async def download(update: Update, context: CallbackContext):
     await update.message.reply_video(video_url)  # Mengirimkan video ke pengguna
 
 # Fungsi utama untuk menjalankan bot
-async def main():
+def main():
     application = Application.builder().token('8305181648:AAFqVhMdh2vBiLzb9N3z3H5AXt7LKZMEZDk').build()  # Ganti dengan token API Anda
 
     # Menambahkan handler
     application.add_handler(CommandHandler('start', start))
     application.add_handler(CommandHandler('download', download))
 
-    # Memulai bot
-    await application.run_polling()
+    # Memulai bot dengan polling
+    application.run_polling()
 
 if __name__ == '__main__':
-    import asyncio
-    asyncio.run(main())  # Menjalankan aplikasi secara asinkron
+    main()  # Tidak perlu menggunakan asyncio.run()
