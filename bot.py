@@ -22,6 +22,13 @@ def detect_platform(url):
     else:
         return None
 
+# Fungsi untuk memastikan link Facebook adalah publik
+def convert_facebook_url(url):
+    # Mencari URL yang memiliki '/reel' dan mengubahnya menjadi link 'watch' publik
+    if '/reel' in url:
+        return url.replace('/reel', '/watch')
+    return url
+
 # Fungsi untuk mendownload video dari TikTok atau Facebook
 def download_video(url, platform):
     ydl_opts = {
@@ -35,6 +42,8 @@ def download_video(url, platform):
         if platform == "tiktok":
             info = ydl.extract_info(url, download=True)
         elif platform == "facebook":
+            # Mengonversi URL Facebook jika perlu
+            url = convert_facebook_url(url)
             info = ydl.extract_info(url, download=True)
         else:
             raise ValueError("Unsupported platform")
