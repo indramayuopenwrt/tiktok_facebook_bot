@@ -1,32 +1,35 @@
 from telegram import Update
 from telegram.ext import Updater, CommandHandler, CallbackContext
 import requests
-from TikTokApi import TikTokApi
 import yt_dlp
 import subprocess
 from tqdm import tqdm
 
-# Fungsi untuk mengunduh video TikTok dengan kualitas terbaik
+# Fungsi untuk mengunduh video TikTok dengan kualitas terbaik menggunakan yt-dlp
 def get_tiktok_video(url):
-    with TikTokApi() as api:
-        video = api.video(url)
-        # Mendapatkan video dengan kualitas terbaik
-        best_quality_video = video.bytes()
-        return best_quality_video
+    ydl_opts = {
+        'quiet': True,
+        'extract_audio': False,
+        'format': 'bestvideo+bestaudio/best',  # Memilih kualitas video terbaik
+        'outtmpl': 'downloads/%(id)s.%(ext)s',  # Lokasi penyimpanan video
+    }
+    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+        info_dict = ydl.extract_info(url, download=True)
+        return info_dict['url']  # Mengembalikan URL video yang sudah diunduh
 
-# Fungsi untuk mengunduh video Facebook dengan kualitas terbaik
+# Fungsi untuk mengunduh video Facebook dengan kualitas terbaik menggunakan yt-dlp
 def get_facebook_video(url):
     ydl_opts = {
         'quiet': True,
         'extract_audio': False,
-        'format': 'bestvideo+bestaudio/best',  # Memilih kualitas video dan audio terbaik
-        'outtmpl': 'downloads/%(id)s.%(ext)s',
+        'format': 'bestvideo+bestaudio/best',  # Memilih kualitas video terbaik
+        'outtmpl': 'downloads/%(id)s.%(ext)s',  # Lokasi penyimpanan video
     }
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         info_dict = ydl.extract_info(url, download=True)
-        return info_dict['url']  # Mengembalikan URL video dengan kualitas terbaik
+        return info_dict['url']  # Mengembalikan URL video yang sudah diunduh
 
-# Fungsi untuk menghapus watermark
+# Fungsi untuk menghapus watermark dari video (menggunakan ffmpeg)
 def remove_watermark(input_video):
     output_video = 'output.mp4'
     cmd = f'ffmpeg -i {input_video} -vf "delogo=x=10:y=10:w=200:h=100" -c:a copy {output_video}'
@@ -48,23 +51,21 @@ def download_video(url):
 def start(update: Update, context: CallbackContext):
     update.message.reply_text('Welcome! Send me a TikTok or Facebook video link.')
 
-# Fungsi untuk menangani pengunduhan video
+# Fungsi untuk menangani pengunduhan video dari TikTok atau Facebook
 def download(update: Update, context: CallbackContext):
     url = update.message.text
     if "tiktok.com" in url:
-        video = get_tiktok_video(url)
-        video_path = save_video(video)  # Simpan video ke file
+        update.message.reply_text("Downloading TikTok video...")
+        video_url = get_tiktok_video(url)  # Mendapatkan URL video TikTok
     elif "facebook.com" in url:
-        video_url = get_facebook_video(url)
-        video_path = video_url  # Mendapatkan URL video dengan kualitas terbaik
+        update.message.reply_text("Downloading Facebook video...")
+        video_url = get_facebook_video(url)  # Mendapatkan URL video Facebook
     else:
         update.message.reply_text('Link not recognized. Please send a valid TikTok or Facebook link.')
         return
 
-    update.message.reply_text("Downloading video...")
-    video_with_watermark_removed = remove_watermark(video_path)  # Hapus watermark
     update.message.reply_text("Sending video...")
-    update.message.reply_video(video_with_watermark_removed)  # Kirim video ke user
+    update.message.reply_video(video_url)  # Mengirimkan video ke pengguna
 
 # Fungsi utama untuk menjalankan bot
 def main():
