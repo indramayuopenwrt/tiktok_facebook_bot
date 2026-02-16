@@ -1,5 +1,6 @@
 python-telegram-bot==20.0
 yt-dlp
 moviepy
+numpy  # Pastikan numpy terpasang
 requests
 progressbar
