@@ -1,1 +1,1 @@
-web: python bot.py
+web: bash setup.sh && python bot.py
