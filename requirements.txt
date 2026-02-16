@@ -4,3 +4,4 @@ tqdm==4.62.3
 yt-dlp==2021.12.1
 TikTokApi==6.0.0
 ffmpeg-python==0.2.0
+setuptools==65.0.0  # Tambahkan ini untuk memastikan pkg_resources tersedia
