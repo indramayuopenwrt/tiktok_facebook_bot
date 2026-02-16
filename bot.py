@@ -69,7 +69,7 @@ async def download(update: Update, context: CallbackContext):
 
 # Fungsi utama untuk menjalankan bot
 def main():
-    application = Application.builder().token('8305181648:AAFqVhMdh2vBiLzb9N3z3H5AXt7LKZMEZDk').build()  # Ganti dengan token API Anda
+    application = Application.builder().token('8305181648:AAGzXoek5XaS6IzzzJPengutTaoFEXlS1iI').build()  # Ganti dengan token API Anda
 
     # Menambahkan handler
     application.add_handler(CommandHandler('start', start))
