@@ -1,8 +1,5 @@
 python-telegram-bot
-requests
+yt-dlp
 moviepy
-ffmpeg-python
-TikTokApi
-beautifulsoup4
-numpy
-Pillow
+requests
+progressbar
