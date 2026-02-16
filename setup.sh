@@ -1,11 +1,6 @@
-# Update paket
+# Update paket dan install ffmpeg
 apt-get update
-
-# Install ffmpeg
 apt-get install -y ffmpeg
 
-# Install Python dependencies
+# Install dependencies dari requirements.txt
 pip install -r requirements.txt
-
-# Install moviepy
-pip install moviepy
