@@ -117,10 +117,13 @@ def main():
     token = "8305181648:AAFqVhMdh2vBiLzb9N3z3H5AXt7LKZMEZDk"  # Ganti dengan token bot Telegrammu
     application = Application.builder().token(token).build()
 
-    application.add_handler(CommandHandler("start", start))
-    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, download))
-
-    application.run_polling()
+    # Menjalankan webhook
+    application.run_webhook(
+        listen="0.0.0.0",  # Menjaga bot dapat diakses dari luar
+        port=5000,  # Port yang digunakan oleh Railway
+        url_path="YOUR_BOT_TOKEN",  # Ganti dengan token bot Telegrammu
+        webhook_url=f"https://<your_railway_app>.railway.app/YOUR_BOT_TOKEN"  # Ganti dengan URL aplikasi Railway kamu
+    )
 
 if __name__ == '__main__':
     main()
