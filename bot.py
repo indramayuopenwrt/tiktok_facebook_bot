@@ -105,7 +105,7 @@ def main():
         listen="0.0.0.0",  # Bot bisa diakses dari luar
         port=5000,  # Port yang digunakan oleh Railway
         url_path="8305181648:AAFqVhMdh2vBiLzb9N3z3H5AXt7LKZMEZDk",  # Ganti dengan token bot Telegrammu
-        webhook_url=f"tiktok_facebook_bottiktokfacebookbot-production.up.railway.appOnline/8305181648:AAFqVhMdh2vBiLzb9N3z3H5AXt7LKZMEZDk"  # URL aplikasi Railway
+        webhook_url=f"tiktokfacebookbot-production.up.railway.app/8305181648:AAFqVhMdh2vBiLzb9N3z3H5AXt7LKZMEZDk"  # URL aplikasi Railway
     )
 
 if __name__ == '__main__':
