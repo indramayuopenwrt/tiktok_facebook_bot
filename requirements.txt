@@ -2,6 +2,6 @@ python-telegram-bot==20.0
 requests==2.26.0
 tqdm==4.62.3
 yt-dlp==2021.12.1
-TikTokApi==6.0.0
+TikTokApi==6.0.0  # Pastikan TikTokApi terbaru
 ffmpeg-python==0.2.0
-setuptools==65.0.0  # Tambahkan ini untuk memastikan pkg_resources tersedia
+setuptools==65.0.0  # Pastikan setuptools terbaru
