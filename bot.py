@@ -32,14 +32,16 @@ def convert_facebook_url(url):
             url += '?v=' + url.split('/')[-1]  # Menambahkan query parameter untuk video
     return url
 
-# Fungsi untuk mendownload video dari TikTok atau Facebook
-def download_video(url, platform):
+# Fungsi untuk mendownload video dari TikTok atau Facebook dengan progress bar
+def download_video(url, platform, update):
     ydl_opts = {
         'format': 'best',  # Pilih format terbaik yang sudah dipadukan video + audio
         'noplaylist': True,
         'quiet': True,
         'outtmpl': 'downloads/%(id)s.%(ext)s',
         'merge_output_format': 'mp4',  # Gabungkan video dan audio dalam satu format mp4
+        'extract_flat': False,  # Untuk memastikan kita mendapatkan metadata
+        'progress_hooks': [lambda d: progress_bar(d, update)]  # Update progress bar real-time
     }
 
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
@@ -52,9 +54,26 @@ def download_video(url, platform):
         else:
             raise ValueError("Unsupported platform")
 
+        # Ambil metadata (judul, deskripsi, dll)
+        description = info.get('description', 'No description available.')
+        title = info.get('title', 'No title available.')
         video_url = info['url']
         file_path = ydl.prepare_filename(info)
-        return file_path, video_url
+        
+        return file_path, video_url, title, description
+
+# Fungsi untuk menangani update progress bar
+def progress_bar(d, update):
+    if d['status'] == 'downloading':
+        # Proses pengunduhan
+        total_size = d.get('total_bytes', 0)
+        downloaded = d.get('downloaded_bytes', 0)
+        percent = (downloaded / total_size) * 100 if total_size > 0 else 0
+        speed = d.get('speed', 0) / 1024  # Kecepatan dalam KB/s
+        eta = d.get('eta', 0)
+
+        # Kirimkan progress ke Telegram
+        update.message.edit_text(f"Downloading... {percent:.2f}% ({downloaded / 1024:.2f}KB/{total_size / 1024:.2f}KB) at {speed:.2f}KB/s. ETA: {eta}s")
 
 # Fungsi untuk menangani command /start
 async def start(update: Update, context: CallbackContext):
@@ -74,8 +93,11 @@ async def download(update: Update, context: CallbackContext):
     await update.message.reply_text(f"Detected platform: {platform}")
 
     try:
-        file_path, video_url = download_video(url, platform)
-        await update.message.reply_text(f"Video downloaded successfully! Video URL: {video_url}")
+        # Mulai mengunduh video dengan progress bar
+        file_path, video_url, title, description = download_video(url, platform, update)
+        
+        # Kirim metadata deskripsi bersama dengan video
+        await update.message.reply_text(f"Title: {title}\nDescription: {description}")
 
         # Kirim video yang sudah diunduh
         with open(file_path, 'rb') as video_file:
