@@ -26,16 +26,20 @@ def detect_platform(url):
 def convert_facebook_url(url):
     # Mencari URL yang memiliki '/reel' dan mengubahnya menjadi link 'watch' publik
     if '/reel' in url:
-        return url.replace('/reel', '/watch')
+        url = url.replace('/reel', '/watch')
+    elif '/share/' in url:  # Menangani URL Facebook berbagi
+        if not 'v=' in url:
+            url += '?v=' + url.split('/')[-1]  # Menambahkan query parameter untuk video
     return url
 
 # Fungsi untuk mendownload video dari TikTok atau Facebook
 def download_video(url, platform):
     ydl_opts = {
-        'format': 'bestvideo+bestaudio/best',  # Mendapatkan video dan audio terbaik
+        'format': 'best',  # Pilih format terbaik yang sudah dipadukan video + audio
         'noplaylist': True,
         'quiet': True,
-        'outtmpl': 'downloads/%(id)s.%(ext)s',  # Tentukan path file output
+        'outtmpl': 'downloads/%(id)s.%(ext)s',
+        'merge_output_format': 'mp4',  # Gabungkan video dan audio dalam satu format mp4
     }
 
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
