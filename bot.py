@@ -1,82 +1,96 @@
 import os
-import requests
-from moviepy.editor import VideoFileClip
-from tiktokapi import TikTokApi
+import logging
+import re
 from telegram import Update
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext
-import ffmpeg
-from telegram import ParseMode
+import yt_dlp
+from moviepy.editor import VideoFileClip
 
-# Token Bot Telegram Anda
-TOKEN = 'YOUR_BOT_TOKEN'
+# Mengatur logging untuk debug
+logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+                    level=logging.INFO)
+logger = logging.getLogger(__name__)
 
-# Fungsi untuk mendownload video TikTok
-def download_tiktok_video(url):
-    api = TikTokApi.get_instance()
-    video_data = api.video(url=url).bytes()
-    with open('tiktok_video.mp4', 'wb') as f:
-        f.write(video_data)
-    return 'tiktok_video.mp4'
+# Fungsi untuk mendeteksi platform dari URL
+def detect_platform(url):
+    tiktok_pattern = r'(https?://(?:www\.)?tiktok\.com/.*)'
+    facebook_pattern = r'(https?://(?:www\.)?facebook\.com/.*)'
 
-# Fungsi untuk menghapus watermark dari video
-def remove_watermark(input_file):
-    output_file = "clean_video.mp4"
-    clip = VideoFileClip(input_file)
-    # Pemotongan atau penghilangan watermark (sesuaikan dengan kebutuhan)
-    clip = clip.subclip(0, clip.duration)
-    clip.write_videofile(output_file, codec="libx264")
-    return output_file
-
-# Fungsi untuk mendapatkan metadata deskripsi
-def get_video_metadata(url):
-    api = TikTokApi.get_instance()
-    video = api.video(url=url)
-    metadata = {
-        "title": video.title,
-        "description": video.description,
-        "author": video.author,
-        "likes": video.stats.likes,
-        "shares": video.stats.shares
-    }
-    return metadata
-
-# Fungsi untuk mengunduh video berdasarkan link
-def download_video(update: Update, context: CallbackContext):
-    url = update.message.text
-    if 'tiktok.com' in url:
-        update.message.reply_text("Mengunduh video TikTok...")
-        video_file = download_tiktok_video(url)
-        video_no_watermark = remove_watermark(video_file)
-        metadata = get_video_metadata(url)
-        update.message.reply_text(f"**Title**: {metadata['title']}\n**Description**: {metadata['description']}\n**Author**: {metadata['author']}\n**Likes**: {metadata['likes']}\n**Shares**: {metadata['shares']}", parse_mode=ParseMode.MARKDOWN)
-        context.bot.send_video(chat_id=update.effective_chat.id, video=open(video_no_watermark, 'rb'))
-    elif 'facebook.com' in url:
-        update.message.reply_text("Mengunduh video Facebook...")
-        # Implementasi Facebook Scraper (Perlu akses API atau scraping manual)
-        pass
+    if re.match(tiktok_pattern, url):
+        return "tiktok"
+    elif re.match(facebook_pattern, url):
+        return "facebook"
     else:
-        update.message.reply_text("Link tidak dikenali. Harap kirim link TikTok atau Facebook.")
+        return None
 
-# Fungsi untuk download massal berdasarkan username TikTok
-def download_mass_by_username(update: Update, context: CallbackContext):
-    username = context.args[0]
-    update.message.reply_text(f"Memulai unduhan massal untuk pengguna {username}...")
-    # Implementasi untuk mengambil video berdasarkan username di TikTok
-    # Bisa menggunakan API atau scraping untuk mendapatkan daftar video
-    pass
+# Fungsi untuk menghapus watermark menggunakan moviepy
+def remove_watermark(input_path, output_path):
+    clip = VideoFileClip(input_path)
+    cropped_clip = clip.crop(y1=50)  # Adjust this value based on your video
+    cropped_clip.write_videofile(output_path)
 
-# Fungsi untuk menampilkan progress unduhan
-def show_progress(update, total, current):
-    percent = (current / total) * 100
-    update.message.edit_text(f"Progress: {percent:.2f}%")
+# Fungsi untuk mendownload video dari TikTok atau Facebook
+def download_video(url, platform):
+    ydl_opts = {
+        'format': 'bestvideo+bestaudio/best',
+        'noplaylist': True,
+        'quiet': True,
+        'outtmpl': 'downloads/%(id)s.%(ext)s',  # Tentukan path file output
+    }
 
-# Menambahkan handler
-updater = Updater(TOKEN, use_context=True)
-dispatcher = updater.dispatcher
+    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+        if platform == "tiktok":
+            info = ydl.extract_info(url, download=True)
+        elif platform == "facebook":
+            info = ydl.extract_info(url, download=True)
+        else:
+            raise ValueError("Unsupported platform")
 
-dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, download_video))
-dispatcher.add_handler(CommandHandler('mass', download_mass_by_username))
+        video_url = info['url']
+        file_path = ydl.prepare_filename(info)
+        return file_path, video_url
 
-# Memulai bot
-updater.start_polling()
-updater.idle()
+# Fungsi untuk menangani command /start
+def start(update: Update, context: CallbackContext):
+    update.message.reply_text("Hi! Send me a TikTok or Facebook video link, and I will download it for you!")
+
+# Fungsi untuk menangani pengunduhan video
+def download(update: Update, context: CallbackContext):
+    url = update.message.text
+    update.message.reply_text("Processing, please wait...")
+
+    # Deteksi platform dari URL
+    platform = detect_platform(url)
+
+    if not platform:
+        update.message.reply_text("Sorry, I can't process this URL. Please provide a TikTok or Facebook link.")
+        return
+
+    try:
+        file_path, video_url = download_video(url, platform)
+        update.message.reply_text(f"Video downloaded successfully! Video URL: {video_url}")
+
+        # Hapus watermark jika diperlukan
+        output_path = f"downloads/cleaned_{os.path.basename(file_path)}"
+        remove_watermark(file_path, output_path)
+
+        update.message.reply_video(video=open(output_path, 'rb'), caption="Here is your video without watermark.")
+
+    except Exception as e:
+        update.message.reply_text(f"An error occurred: {e}")
+
+# Fungsi utama untuk menjalankan bot
+def main():
+    token = "8305181648:AAFqVhMdh2vBiLzb9N3z3H5AXt7LKZMEZDk"  # Ganti dengan token bot Telegrammu
+    updater = Updater(token, use_context=True)
+
+    dp = updater.dispatcher
+
+    dp.add_handler(CommandHandler("start", start))
+    dp.add_handler(MessageHandler(Filters.text & ~Filters.command, download))
+
+    updater.start_polling()
+    updater.idle()
+
+if __name__ == '__main__':
+    main()
