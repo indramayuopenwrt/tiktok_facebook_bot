@@ -4,7 +4,6 @@ import re
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackContext
 import yt_dlp
-from moviepy.editor import VideoFileClip
 
 # Mengatur logging untuk debug
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -23,16 +22,10 @@ def detect_platform(url):
     else:
         return None
 
-# Fungsi untuk menghapus watermark menggunakan moviepy
-def remove_watermark(input_path, output_path):
-    clip = VideoFileClip(input_path)
-    cropped_clip = clip.crop(y1=50)  # Adjust this value based on your video
-    cropped_clip.write_videofile(output_path)
-
 # Fungsi untuk mendownload video dari TikTok atau Facebook
 def download_video(url, platform):
     ydl_opts = {
-        'format': 'bestvideo+bestaudio/best',
+        'format': 'bestvideo+bestaudio/best',  # Mendapatkan video dan audio terbaik
         'noplaylist': True,
         'quiet': True,
         'outtmpl': 'downloads/%(id)s.%(ext)s',  # Tentukan path file output
@@ -65,23 +58,22 @@ async def download(update: Update, context: CallbackContext):
     if not platform:
         await update.message.reply_text("Sorry, I can't process this URL. Please provide a TikTok or Facebook link.")
         return
+    await update.message.reply_text(f"Detected platform: {platform}")
 
     try:
         file_path, video_url = download_video(url, platform)
         await update.message.reply_text(f"Video downloaded successfully! Video URL: {video_url}")
 
-        # Hapus watermark jika diperlukan
-        output_path = f"downloads/cleaned_{os.path.basename(file_path)}"
-        remove_watermark(file_path, output_path)
-
-        await update.message.reply_video(video=open(output_path, 'rb'), caption="Here is your video without watermark.")
+        # Kirim video yang sudah diunduh
+        with open(file_path, 'rb') as video_file:
+            await update.message.reply_video(video=video_file, caption="Here is your video.")
 
     except Exception as e:
         await update.message.reply_text(f"An error occurred: {e}")
 
 # Fungsi utama untuk menjalankan bot
 def main():
-    token = "YOUR_BOT_TOKEN"  # Ganti dengan token bot Telegrammu
+    token = "8305181648:AAFqVhMdh2vBiLzb9N3z3H5AXt7LKZMEZDk"  # Ganti dengan token bot Telegrammu
     application = Application.builder().token(token).build()
 
     application.add_handler(CommandHandler("start", start))
