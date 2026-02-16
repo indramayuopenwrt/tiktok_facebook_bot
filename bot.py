@@ -68,7 +68,13 @@ def progress_bar(d, update):
         # Proses pengunduhan
         total_size = d.get('total_bytes', 0)
         downloaded = d.get('downloaded_bytes', 0)
-        percent = (downloaded / total_size) * 100 if total_size > 0 else 0
+        
+        # Menghindari pembagian dengan None atau 0
+        if total_size > 0:
+            percent = (downloaded / total_size) * 100
+        else:
+            percent = 0
+        
         speed = d.get('speed', 0) / 1024  # Kecepatan dalam KB/s
         eta = d.get('eta', 0)
 
