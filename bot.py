@@ -2,7 +2,7 @@ import os
 import logging
 import re
 from telegram import Update
-from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext
+from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackContext
 import yt_dlp
 from moviepy.editor import VideoFileClip
 
@@ -51,46 +51,43 @@ def download_video(url, platform):
         return file_path, video_url
 
 # Fungsi untuk menangani command /start
-def start(update: Update, context: CallbackContext):
-    update.message.reply_text("Hi! Send me a TikTok or Facebook video link, and I will download it for you!")
+async def start(update: Update, context: CallbackContext):
+    await update.message.reply_text("Hi! Send me a TikTok or Facebook video link, and I will download it for you!")
 
 # Fungsi untuk menangani pengunduhan video
-def download(update: Update, context: CallbackContext):
+async def download(update: Update, context: CallbackContext):
     url = update.message.text
-    update.message.reply_text("Processing, please wait...")
+    await update.message.reply_text("Processing, please wait...")
 
     # Deteksi platform dari URL
     platform = detect_platform(url)
 
     if not platform:
-        update.message.reply_text("Sorry, I can't process this URL. Please provide a TikTok or Facebook link.")
+        await update.message.reply_text("Sorry, I can't process this URL. Please provide a TikTok or Facebook link.")
         return
 
     try:
         file_path, video_url = download_video(url, platform)
-        update.message.reply_text(f"Video downloaded successfully! Video URL: {video_url}")
+        await update.message.reply_text(f"Video downloaded successfully! Video URL: {video_url}")
 
         # Hapus watermark jika diperlukan
         output_path = f"downloads/cleaned_{os.path.basename(file_path)}"
         remove_watermark(file_path, output_path)
 
-        update.message.reply_video(video=open(output_path, 'rb'), caption="Here is your video without watermark.")
+        await update.message.reply_video(video=open(output_path, 'rb'), caption="Here is your video without watermark.")
 
     except Exception as e:
-        update.message.reply_text(f"An error occurred: {e}")
+        await update.message.reply_text(f"An error occurred: {e}")
 
 # Fungsi utama untuk menjalankan bot
 def main():
-    token = "8305181648:AAFqVhMdh2vBiLzb9N3z3H5AXt7LKZMEZDk"  # Ganti dengan token bot Telegrammu
-    updater = Updater(token, use_context=True)
+    token = "YOUR_BOT_TOKEN"  # Ganti dengan token bot Telegrammu
+    application = Application.builder().token(token).build()
 
-    dp = updater.dispatcher
+    application.add_handler(CommandHandler("start", start))
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, download))
 
-    dp.add_handler(CommandHandler("start", start))
-    dp.add_handler(MessageHandler(Filters.text & ~Filters.command, download))
-
-    updater.start_polling()
-    updater.idle()
+    application.run_polling()
 
 if __name__ == '__main__':
     main()
