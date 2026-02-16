@@ -107,7 +107,7 @@ async def download(update: Update, context: CallbackContext):
 
         # Kirim video yang sudah diunduh
         with open(file_path, 'rb') as video_file:
-            await update.message.reply_video(video=video_file, caption="Here is your video.")
+            await update.message.reply_video(video=video_file, caption="Silahkan Tuan Videonya.")
 
     except Exception as e:
         await update.message.reply_text(f"An error occurred: {e}")
@@ -121,8 +121,8 @@ def main():
     application.run_webhook(
         listen="0.0.0.0",  # Menjaga bot dapat diakses dari luar
         port=5000,  # Port yang digunakan oleh Railway
-        url_path="YOUR_BOT_TOKEN",  # Ganti dengan token bot Telegrammu
-        webhook_url=f"https://<your_railway_app>.railway.app/YOUR_BOT_TOKEN"  # Ganti dengan URL aplikasi Railway kamu
+        url_path="8305181648:AAFqVhMdh2vBiLzb9N3z3H5AXt7LKZMEZDk",  # Ganti dengan token bot Telegrammu
+        webhook_url=f"tiktokfacebookbot-production.up.railway.app/8305181648:AAFqVhMdh2vBiLzb9N3z3H5AXt7LKZMEZDk"  # Ganti dengan URL aplikasi Railway kamu
     )
 
 if __name__ == '__main__':
