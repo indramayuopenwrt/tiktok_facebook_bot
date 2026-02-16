@@ -76,7 +76,7 @@ def main():
     application.add_handler(CommandHandler('download', download))
 
     # Memulai bot dengan polling
-    application.run_polling()
+    application.run_polling(drop_pending_updates=True)  # Pastikan tidak ada update yang tertunda
 
 if __name__ == '__main__':
-    main()  # Tidak perlu menggunakan asyncio.run()
+    main()  # Menjalankan aplikasi secara langsung
